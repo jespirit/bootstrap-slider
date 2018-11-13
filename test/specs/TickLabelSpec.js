@@ -79,6 +79,7 @@ describe("Tick Labels 'is-selection' and 'in-selection' Tests", function() {
 	var keyboardEvent;
 	var $slider;
 	var $handle1;
+	var $handle2;
 
 	// Setup
 	beforeEach(function() {
