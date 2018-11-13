@@ -72,3 +72,138 @@ describe("Tick Label Render Tests", function() {
 	testOrientation('horizontal');
 	testOrientation('vertical');
 });
+
+describe("Tick Labels 'is-selection' and 'in-selection' Tests", function() {
+	var $inputSlider;
+	var options;
+	var keyboardEvent;
+	var $slider;
+	var $handle1;
+
+	// Setup
+	beforeEach(function() {
+		options = {
+			id: 'slider1',
+			ticks: [0, 1, 2, 3, 4],
+			value: 2,
+			ticks_labels:['$0', '$1', '$2', '$3', '$4'],
+		};
+
+		// Create keyboard event
+		keyboardEvent = document.createEvent('Event');
+		keyboardEvent.initEvent('keydown', true, true);
+	});
+
+	// Cleanup
+	afterEach(function() {
+		$inputSlider.slider('destroy');
+		$inputSlider = null;
+	});
+
+	describe("Tick Labels 'is-selection' Tests", function() {
+
+		describe("'options.selection = 'before'", function() {
+
+			beforeEach(function() {
+				options.selection = 'before';
+				$inputSlider = $('#testSlider1').slider(options);
+				$slider = $('#slider1');
+			});
+
+			it("Should show the correct tick labels as 'is-selection'", function() {
+				expect($slider.find('.label-is-selection').length).toBe(1);
+			});
+
+			it("Should show the correct tick labels as 'is-selection' when keying to the left", function(done) {
+				$handle1 = $('#slider1').find('.slider-handle:first');
+
+				expect($slider.find('.label-is-selection').length).toBe(1);
+
+				$handle1.on('keydown', function() {
+					expect($slider.find('.label-is-selection').length).toBe(1);
+					done();
+				});
+
+				// Move handle1 to the left with keyboard
+				$handle1.focus();
+				keyboardEvent.keyCode = keyboardEvent.which = 37;
+				$handle1[0].dispatchEvent(keyboardEvent);
+			});
+		});
+
+		describe("'options.selection = 'after'", function() {
+
+			beforeEach(function() {
+				options.selection = 'after';
+				$inputSlider = $('#testSlider1').slider(options);
+				$slider = $('#slider1');
+			});
+
+			it("Should show the correct tick labels as 'is-selection'" , function() {
+				expect($slider.find('.label-is-selection').length).toBe(1);
+			});
+
+			it("Should show the correct tick labels as 'is-selection' when keying to the right" , function(done) {
+				$handle1 = $('#slider1').find('.slider-handle:first');
+
+				expect($slider.find('.label-is-selection').length).toBe(1);
+
+				$handle1.on('keydown', function() {
+					expect($slider.find('.label-is-selection').length).toBe(1);
+					done();
+				});
+
+				// Move handle1 to the right with keyboard
+				$handle1.focus();
+				keyboardEvent.keyCode = keyboardEvent.which = 39;
+				$handle1[0].dispatchEvent(keyboardEvent);
+			});
+		});
+	});
+
+	describe("Tick Labels 'in-selection' Tests", function() {
+
+		// Setup
+		beforeEach(function() {
+			options.value = [1, 3];
+			$inputSlider = $('#testSlider1').slider(options);
+			$slider = $('#slider1');
+		});
+
+		it("Should show the correct tick labels as 'in-selection'", function() {
+			expect($slider.find('.label-is-selection').length).toBe(3);
+		});
+
+		it("Should show the correct tick labels as 'in-selection' when keying to the left", function(done) {
+			$handle1 = $('#slider1').find('.slider-handle:first');
+
+			expect($slider.find('.label-is-selection').length).toBe(3);
+
+			$handle1.on('keydown', function() {
+				expect($slider.find('.label-is-selection').length).toBe(4);
+				done();
+			});
+
+			// Move handle1 to the left with keyboard
+			$handle1.focus();
+			keyboardEvent.keyCode = keyboardEvent.which = 37;
+			$handle1[0].dispatchEvent(keyboardEvent);
+		});
+
+		it("Should show the correct tick labels as 'in-selection' when keying to the right" , function(done) {
+			$handle2 = $('#slider1').find('.slider-handle:last');
+
+			expect($slider.find('.label-is-selection').length).toBe(3);
+
+			$handle2.on('keydown', function() {
+				expect($slider.find('.label-is-selection').length).toBe(4);
+				done();
+			});
+
+			// Move handle1 to the right with keyboard
+			$handle2.focus();
+			keyboardEvent.keyCode = keyboardEvent.which = 39;
+			$handle2[0].dispatchEvent(keyboardEvent);
+		});
+	});
+});
