@@ -80,6 +80,8 @@ describe("Tick Labels 'is-selection' and 'in-selection' Tests", function() {
 	var $slider;
 	var $handle1;
 	var $handle2;
+	var $tickLabels;
+	var tickLabelCount;
 
 	// Setup
 	beforeEach(function() {
@@ -89,6 +91,8 @@ describe("Tick Labels 'is-selection' and 'in-selection' Tests", function() {
 			value: 2,
 			ticks_labels:['$0', '$1', '$2', '$3', '$4'],
 		};
+
+		tickLabelCount = options.ticks_labels.length;
 
 		// Create keyboard event
 		keyboardEvent = document.createEvent('Event');
@@ -109,10 +113,14 @@ describe("Tick Labels 'is-selection' and 'in-selection' Tests", function() {
 				options.selection = 'before';
 				$inputSlider = $('#testSlider1').slider(options);
 				$slider = $('#slider1');
+				$tickLabels = $slider.find('.slider-tick-label-container div.slider-tick-label');
 			});
 
 			it("Should show the correct tick labels as 'is-selection'", function() {
+				// There should only be one tick label with the 'label-is-selection' class
 				expect($slider.find('.label-is-selection').length).toBe(1);
+				// Only the third tick label should have the 'label-is-selection' class
+				expect($tickLabels.eq(2).hasClass('label-is-selection').toBe(true));
 			});
 
 			it("Should show the correct tick labels as 'is-selection' when keying to the left", function(done) {
@@ -122,6 +130,7 @@ describe("Tick Labels 'is-selection' and 'in-selection' Tests", function() {
 
 				$handle1.on('keydown', function() {
 					expect($slider.find('.label-is-selection').length).toBe(1);
+					expect($tickLabels.eq(1).hasClass('label-is-selection').toBe(true));
 					done();
 				});
 
@@ -138,6 +147,7 @@ describe("Tick Labels 'is-selection' and 'in-selection' Tests", function() {
 				options.selection = 'after';
 				$inputSlider = $('#testSlider1').slider(options);
 				$slider = $('#slider1');
+				$tickLabels = $slider.find('.slider-tick-label-container div.slider-tick-label');
 			});
 
 			it("Should show the correct tick labels as 'is-selection'" , function() {
@@ -148,9 +158,11 @@ describe("Tick Labels 'is-selection' and 'in-selection' Tests", function() {
 				$handle1 = $('#slider1').find('.slider-handle:first');
 
 				expect($slider.find('.label-is-selection').length).toBe(1);
+				expect($tickLabels.eq(3).hasClass('label-is-selection').toBe(true));
 
 				$handle1.on('keydown', function() {
 					expect($slider.find('.label-is-selection').length).toBe(1);
+					expect($tickLabels.eq(2).hasClass('label-is-selection').toBe(true));
 					done();
 				});
 
@@ -163,25 +175,49 @@ describe("Tick Labels 'is-selection' and 'in-selection' Tests", function() {
 	});
 
 	describe("Tick Labels 'in-selection' Tests", function() {
+		var expectedLabels;
 
 		// Setup
 		beforeEach(function() {
 			options.value = [1, 3];
 			$inputSlider = $('#testSlider1').slider(options);
 			$slider = $('#slider1');
+			$tickLabels = $slider.find('.slider-tick-label-container div.slider-tick-label');
 		});
 
 		it("Should show the correct tick labels as 'in-selection'", function() {
 			expect($slider.find('.label-is-selection').length).toBe(3);
+
+			expectedLabels = [1, 2, 3];
+			for (var i = 0; i < tickLabelCount; i++) {
+				if (i === expectedLabels[i]) {
+					expect($tickLabels.eq(i).hasClass('label-in-selection').toBe(true));
+				}
+				else {
+					expect($tickLabels.eq(i).hasClass('label-in-selection').toBe(false));
+				}
+			}
 		});
 
 		it("Should show the correct tick labels as 'in-selection' when keying to the left", function(done) {
 			$handle1 = $('#slider1').find('.slider-handle:first');
 
-			expect($slider.find('.label-is-selection').length).toBe(3);
+			// There should be 3 tick labels with the 'label-in-selection' class
+			expect($slider.find('.label-in-selection').length).toBe(3);
+
+			// Check that the correct tick labels have the 'label-in-selection' class
+			expectedLabels = [0, 1, 2, 3];
+			for (var i = 0; i < tickLabelCount; i++) {
+				if (i === expectedLabels[i]) {
+					expect($tickLabels.eq(i).hasClass('label-in-selection').toBe(true));
+				}
+				else {
+					expect($tickLabels.eq(i).hasClass('label-in-selection').toBe(false));
+				}
+			}
 
 			$handle1.on('keydown', function() {
-				expect($slider.find('.label-is-selection').length).toBe(4);
+				expect($slider.find('.label-in-selection').length).toBe(4);
 				done();
 			});
 
@@ -194,14 +230,24 @@ describe("Tick Labels 'is-selection' and 'in-selection' Tests", function() {
 		it("Should show the correct tick labels as 'in-selection' when keying to the right" , function(done) {
 			$handle2 = $('#slider1').find('.slider-handle:last');
 
-			expect($slider.find('.label-is-selection').length).toBe(3);
+			expect($slider.find('.label-in-selection').length).toBe(3);
+
+			expectedLabels = [1, 2, 3, 4];
+			for (var i = 0; i < tickLabelCount; i++) {
+				if (i === expectedLabels[i]) {
+					expect($tickLabels.eq(i).hasClass('label-in-selection').toBe(true));
+				}
+				else {
+					expect($tickLabels.eq(i).hasClass('label-in-selection').toBe(false));
+				}
+			}
 
 			$handle2.on('keydown', function() {
-				expect($slider.find('.label-is-selection').length).toBe(4);
+				expect($slider.find('.label-in-selection').length).toBe(4);
 				done();
 			});
 
-			// Move handle1 to the right with keyboard
+			// Move handle2 to the right with keyboard
 			$handle2.focus();
 			keyboardEvent.keyCode = keyboardEvent.which = 39;
 			$handle2[0].dispatchEvent(keyboardEvent);
