@@ -1011,7 +1011,6 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 
 			relayout: function relayout() {
 				this._resize();
-				this._layout();
 				return this;
 			},
 
