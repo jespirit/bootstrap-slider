@@ -905,6 +905,14 @@ const windowIsDefined = (typeof window === "object");
 				}
 			},
 
+			/**
+			 * Validates the input value, changes the precision of the slider value, positions the slider elements
+			 * by calling `_layout()`, and optionally triggers the 'slide' and/or 'change' events.
+			 * @param {number} val New value to set
+			 * @param {boolean} triggerSlideEvent Trigger the 'slide' event?
+			 * @param {boolean} triggerChangeEvent Trigger the 'change' event?
+			 * @returns {Slider} this
+			 */
 			setValue: function(val, triggerSlideEvent, triggerChangeEvent) {
 				if (!val) {
 					val = 0;
@@ -1191,6 +1199,21 @@ const windowIsDefined = (typeof window === "object");
 					}
 				};
 			},
+			/**
+			 * Position the handles, highlight range elements, ticks and labels.
+			 * Set aria- attributes.
+			 * Add `in-selection` CSS classes.
+			 * Update the tooltip text.
+			 * Position the slider track according to orientation.
+			 * 
+			 * Functions that call `_layout()`:
+			 * `setValue()`
+			 * `_resize()`
+			 * `_mousedown()`
+			 * `_keydown()`
+			 * `_mousemove()`
+			 * `_mouseup()`
+			 */
 			_layout: function() {
 				var positionPercentages;
 
@@ -1637,6 +1660,10 @@ const windowIsDefined = (typeof window === "object");
 					}
 				}
 			},
+			/**
+			 * Adjust the percentages of the handles in the event they overlap each other.
+			 * @param {number} percentage Percentage of where the handle is on the slider
+			 */
 			_adjustPercentageForRangeSliders: function(percentage) {
 				if (this.options.range) {
 					var precision = this._getNumDigitsAfterDecimalPlace(percentage);
@@ -1689,6 +1716,10 @@ const windowIsDefined = (typeof window === "object");
 
 				return false;
 			},
+			/**
+			 * Calculates the value(s) of slider (or range slider) based on the percentages of the handles.
+			 * @param {boolean} snapToClosestTick Snap to the closest tick?
+			 */
 			_calculateValue: function(snapToClosestTick) {
 				var val;
 				if (this.options.range) {
@@ -1729,6 +1760,11 @@ const windowIsDefined = (typeof window === "object");
 				}
 				return val;
 			},
+			/**
+			 * Changes the precision of the slider value according to `options.precision` or to match
+			 * the precision of the `options.step` value.
+			 * @param {number} val Single slider value
+			 */
 			_applyPrecision: function(val) {
 				var precision = this.options.precision || this._getNumDigitsAfterDecimalPlace(this.options.step);
 				return this._applyToFixedAndParseFloat(val, precision);
@@ -1785,6 +1821,10 @@ const windowIsDefined = (typeof window === "object");
 					if (typeof input !== 'number') { throw new Error( ErrorMsgs.formatInvalidInputErrorMsg(input) ); }
 				}
 			},
+			/**
+			 * Set 'input' element HTML attributes
+			 * @param {number} val Slider value
+			 */
 			_setDataVal: function(val) {
 				this.element.setAttribute('data-value', val);
 				this.element.setAttribute('value', val);
