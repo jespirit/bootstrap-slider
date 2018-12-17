@@ -49,19 +49,27 @@ module.exports = function(grunt) {
         src: '<%= pkg.gruntConfig.js.slider %>'
       },
       options: {
-        esnext: true,
+        // Note: 'deprecated' describes the case of code style or conventions
+        // vs. code correctness
+        esnext: true,  // ECMAScript 6 syntax (deprecated)
         curly: true,
         eqeqeq: true,
         immed: true,
-        latedef: false,
-        newcap: true,
+        latedef: false,  // always define a variable before use
+        newcap: true,  // capitalize constructor functions (deprecated)
         noarg: true,
-        sub: true,
+        sub: true,  // person['name'] vs. person.name (deprecated)
         undef: true,
         unused: true,
+        // assignment where comparison is expected
+        // if (a = 10) {}
+        // use case: for (var i = 0, person; person = people[i]; i++) {}
         boss: true,
         eqnull: true,
+        // globals exposed by modern browsers
+        // ie. document, navigator, HTML5 FileReader
         browser: true,
+        // these variables are defined in another file
         globals: {
           $ : true,
           Modernizr : true,
@@ -79,7 +87,7 @@ module.exports = function(grunt) {
         src: '<%= pkg.gruntConfig.js.slider %>'
       },
       spec : {
-        src: '<%= pkg.gruntConfig.spec %>',
+        src: '<%= pkg.gruntConfig.spec %>',  // "test/specs/**/*.js"
         options : {
           globals : {
             document: true,
@@ -119,9 +127,18 @@ module.exports = function(grunt) {
       src: ['./src/less/bootstrap-slider.less']
     },
     jasmine : {
+      // Steps:
+      // Load 'src' into memory
       src : '<%= pkg.gruntConfig.temp.js %>',
       options : {
+        // Run each file in 'spec'
         specs : '<%= pkg.gruntConfig.spec %>',
+        // specify jQuery first, bind polyfill, then bootstrap-slider.js, plus all specs
+        // <% with (scripts) { %>
+        //   <% [].concat(polyfills, jasmine, boot, vendor, helpers, src, specs,reporters).forEach(function(script){ %>
+        //     <script src="<%= script %>"></script>
+        //   <% }) %>
+        // <% }; %>
         vendor : ['<%= pkg.gruntConfig.js.jquery %>', '<%= pkg.gruntConfig.js.bindPolyfill %>'],
         styles : ['<%= pkg.gruntConfig.css.bootstrap %>', '<%= pkg.gruntConfig.temp.css %>'],
         template : '<%= pkg.gruntConfig.tpl.SpecRunner %>'
@@ -276,14 +293,16 @@ module.exports = function(grunt) {
     'lesslint',
     'sasslint'
   ]);
+  // npm test -> grunt test
+  // How do you set up 'grunt lint' to run first?
   grunt.registerTask('test', [
     'babel',
-    'less:development',
+    'less:development',  // Pass 'development' as argument -> grunt less:development
     'jasmine',
     'clean:temp'
   ]);
   grunt.registerTask('build', [
-    'less:development',
+    'less:development',  // Compile LESS files to CSS
     'test',
     'template:generate-index-page'
   ]);
@@ -292,6 +311,16 @@ module.exports = function(grunt) {
     'babel',
     'template:generate-gh-pages'
   ]);
+  // 1. clean dist/
+  // 2. compile .less          -> temp/bootstrap-slider.css
+  // 2. compile + minify .less -> temp/bootstrap-slider.min.css
+  // 4. compile .js            -> temp/bootstrap-slider.js
+  // 5. minify .js             -> temp/bootstrap-slider.min.js
+  // 6. add headers .js, .css
+  //    -> dist/css/bootstrap-slider.css
+  //    -> dist/css/bootstrap-slider.min.css
+  //    -> dist/bootstrap-slider.js
+  //    -> dist/bootstrap-slider.min.js
   grunt.registerTask('dist', [
     'clean:dist',
     'less:production',
@@ -309,8 +338,8 @@ module.exports = function(grunt) {
     'watch'
   ]);
   grunt.registerTask('production', ['dist']);
-  grunt.registerTask('dev', 'development');
-  grunt.registerTask('prod', 'production');
+  grunt.registerTask('dev', 'development');  // Alias for grunt development
+  grunt.registerTask('prod', 'production');  // Alias for grunt production
   grunt.registerTask('default', ['build']);
 
 }; // End of module

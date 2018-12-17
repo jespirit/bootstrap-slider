@@ -169,9 +169,12 @@ const windowIsDefined = (typeof window === "object");
 			        }
 			      }
 			      // return this if no return value
-			      return this;
+			      return this;  // return array-like jQuery object (chaining non-getter methods)
 			    } else {
-			      var objects = this.map( function() {
+				  // $('#testSlider1).slider() is calling $.fn.slider() where 'this' refers array-like jQuery object
+				  // In general, from inside a jQuery function callback (eg. $('button').on('click', function(){})),
+				  // 'this' will refer to the DOM element (eg. button)
+			      var objects = this.map( function() {  // able to return a list of $(<input>) elements
 			        var instance = $.data( this, namespace );
 			        if ( instance ) {
 			          // apply options & init
@@ -182,7 +185,7 @@ const windowIsDefined = (typeof window === "object");
 			          instance = new PluginClass( this, options );
 			          $.data( this, namespace, instance );
 			        }
-			        return $(this);
+			        return $(this);  // 'this' refers to the <input> DOM element
 			      });
 
 			      if(!objects || objects.length > 1) {
@@ -727,6 +730,7 @@ const windowIsDefined = (typeof window === "object");
 			this.handle1 = sliderMinHandle || this.handle1;
 			this.handle2 = sliderMaxHandle || this.handle2;
 
+			// FIXME: Remove 'custom' class
 			if (updateSlider === true) {
 				// Reset classes
 				this._removeClass(this.handle1, 'round triangle');
@@ -930,6 +934,9 @@ const windowIsDefined = (typeof window === "object");
 				}
 				else {
 					this._state.value = applyPrecision(this._state.value);
+					// Logic:
+					// value = [ within_bounds(value) ]  // create one-element array
+					// value[1] = min/max  // array has 2 elements now
 					this._state.value = [ Math.max(this.options.min, Math.min(this.options.max, this._state.value))];
 					this._addClass(this.handle2, 'hide');
 					if (this.options.selection === 'after') {
@@ -1161,7 +1168,12 @@ const windowIsDefined = (typeof window === "object");
 				}
 				this._state.over = false;
 			},
+			/**
+			 * Displays the formatted value in the tooltip and positions the tooltip correctly.
+			 * @param {Object} tempstate Temporary state of Slider
+			 */
 			_setToolTipOnMouseOver: function _setToolTipOnMouseOver(tempState){
+				// If `tempState` exists then use `tempState.percentage[0]`
 				var formattedTooltipVal = this.options.formatter(!tempState ? this._state.value[0]: tempState.value[0]);
 				var positionPercentages = !tempState ? getPositionPercentages(this._state, this.options.reversed) : getPositionPercentages(tempState, this.options.reversed);
 				this._setText(this.tooltipInner, formattedTooltipVal);
@@ -1180,6 +1192,11 @@ const windowIsDefined = (typeof window === "object");
 					addMouseEnter: function(reference, tick, index){
 						var enter = function(){
 							var tempState = reference._state;
+							// If this is for the handle, then show the `aria-valuenow` value.
+							// Else for ticks, use the tick index to display the correct value.
+							// `this` refers to the handle DOM element (either handle1 or handle2)
+							// FIXME: Implementation uses the `aria-valuenow` attribute of the handle display
+							// the correct value in the tooltip.
 							var idString = index >= 0 ? index : this.attributes['aria-valuenow'].value;
 							var hoverIndex = parseInt(idString, 10);
 							tempState.value[0] = hoverIndex;
@@ -1224,6 +1241,9 @@ const windowIsDefined = (typeof window === "object");
 					positionPercentages = [ this._state.percentage[0], this._state.percentage[1] ];
 				}
 
+				/* Set the position of handles based on the percentage 0-100%.
+				   `stylePos` is either 'left' or 'top depending on the orientation.
+				*/
 				this.handle1.style[this.stylePos] = `${positionPercentages[0]}%`;
 				this.handle1.setAttribute('aria-valuenow', this._state.value[0]);
 				if (isNaN(this.options.formatter(this._state.value[0])) ) {
@@ -1634,6 +1654,10 @@ const windowIsDefined = (typeof window === "object");
 				this._state.percentage[this._state.dragged] = percentage;
 				this._layout();
 
+				// `_calculateValue()` will return a single value or array.
+				// The single value will be converted into an array before storing it in `_state.value`
+				// this._state.value = applyPrecision(this._state.value);
+				// this._state.value = [ Math.max(this.options.min, Math.min(this.options.max, this._state.value))];
 				var val = this._calculateValue(true);
 				this.setValue(val, true, true);
 
@@ -1787,13 +1811,18 @@ const windowIsDefined = (typeof window === "object");
 					ev = ev.touches[0];
 				}
 
+				// mousePos = clientX or clientY
 				var eventPosition = ev[this.mousePos];
+				// stylePos = left, right, or top
+				// offset = getBoundingClientRect().left, .right, or computed top
+				// This offset represents the offset of the element after it is rendered
 				var sliderOffset = this._state.offset[this.stylePos];
 				var distanceToSlide = eventPosition - sliderOffset;
 				if(this.stylePos==='right') {
 					distanceToSlide = -distanceToSlide;
 				}
 				// Calculate what percent of the length the slider handle has slid
+				// size = offsetWidth or offsetHeight
 				var percentage = (distanceToSlide / this._state.size) * 100;
 				percentage = Math.round(percentage / this._state.percentage[2]) * this._state.percentage[2];
 				if (this.options.reversed) {

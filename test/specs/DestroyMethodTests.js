@@ -68,6 +68,7 @@ describe("'destroy()' Method tests", function() {
       expect(flag).toBeFalsy();
     });
 
+    // bootstrapSlider: <input>
     it("unbinds all slider events and allows you to re-create the slider without runtime error", function() {
       // Setup
       var createSliderAndBindEvent = function () {
@@ -97,6 +98,19 @@ describe("'destroy()' Method tests", function() {
       catch (e) {
         throwsRuntimeError = true;
       }
+
+      // Once the <div> slider is removed, but the instance still exists as .data('bootstrapSlider'),
+      // instance.option() is called which "extends" or merges the options together
+      // and _init() which does nothing, so the <div> slider is never added again
+      // Should destroy the slider here
+
+      // if ( instance ) {
+      //   // apply options & init
+      //   instance.option( options );
+      //   instance._init();
+      // }
+
+      // _init: function() {}, // NOTE: Must exist to support bridget
 
       // reCreateSliderAndBindEvent(): Assert error is not thrown
       expect(throwsRuntimeError).toBeFalsy();
