@@ -214,6 +214,7 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
  	**************************************************/
 
 	(function ($) {
+		var autoRegisterNamespace = void 0;
 
 		var ErrorMsgs = {
 			formatInvalidInputErrorMsg: function formatInvalidInputErrorMsg(input) {
@@ -753,23 +754,9 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 			this.touchstart = this._touchstart.bind(this);
 			this.touchmove = this._touchmove.bind(this);
 
-			if (this.touchCapable) {
-				// Test for passive event support
-				var supportsPassive = false;
-				try {
-					var opts = Object.defineProperty({}, 'passive', {
-						get: function get() {
-							supportsPassive = true;
-						}
-					});
-					window.addEventListener("test", null, opts);
-				} catch (e) {}
-				// Use our detect's results. passive applied if supported, capture will be false either way.
-				var eventOptions = supportsPassive ? { passive: true } : false;
-				// Bind touch handlers
-				this.sliderElem.addEventListener("touchstart", this.touchstart, eventOptions);
-				this.sliderElem.addEventListener("touchmove", this.touchmove, eventOptions);
-			}
+			this.sliderElem.addEventListener("touchstart", this.touchstart, false);
+			this.sliderElem.addEventListener("touchmove", this.touchmove, false);
+
 			this.sliderElem.addEventListener("mousedown", this.mousedown, false);
 
 			// Bind window handlers
@@ -807,13 +794,25 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 				} else {
 					this.sliderElem.addEventListener("mouseenter", this.showTooltip, false);
 					this.sliderElem.addEventListener("mouseleave", this.hideTooltip, false);
+
+					this.sliderElem.addEventListener("touchstart", this.showTooltip, false);
+					this.sliderElem.addEventListener("touchmove", this.showTooltip, false);
+					this.sliderElem.addEventListener("touchend", this.hideTooltip, false);
 				}
 
 				this.handle1.addEventListener("focus", this.showTooltip, false);
 				this.handle1.addEventListener("blur", this.hideTooltip, false);
 
+				this.handle1.addEventListener("touchstart", this.showTooltip, false);
+				this.handle1.addEventListener("touchmove", this.showTooltip, false);
+				this.handle1.addEventListener("touchend", this.hideTooltip, false);
+
 				this.handle2.addEventListener("focus", this.showTooltip, false);
 				this.handle2.addEventListener("blur", this.hideTooltip, false);
+
+				this.handle2.addEventListener("touchstart", this.showTooltip, false);
+				this.handle2.addEventListener("touchmove", this.showTooltip, false);
+				this.handle2.addEventListener("touchend", this.hideTooltip, false);
 			}
 
 			if (this.options.enabled) {
@@ -922,7 +921,7 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 
 				var hasChanged = false;
 				if (Array.isArray(newValue)) {
-					hasChanged = oldValue[0] !== newValue[0] && oldValue[1] !== newValue[1];
+					hasChanged = oldValue[0] !== newValue[0] || oldValue[1] !== newValue[1];
 				} else {
 					hasChanged = oldValue !== newValue;
 				}
@@ -955,7 +954,10 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 				// Remove JQuery handlers/data
 				if ($) {
 					this._unbindJQueryEventHandlers();
-					this.$element.removeData('slider');
+					if (autoRegisterNamespace === NAMESPACE_MAIN) {
+						this.$element.removeData(autoRegisterNamespace);
+					}
+					this.$element.removeData(NAMESPACE_ALTERNATE);
 				}
 			},
 
@@ -1024,7 +1026,12 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 				createNewSlider.call(this, this.element, this.options);
 				if ($) {
 					// Bind new instance of slider to the element
-					$.data(this.element, 'slider', this);
+					if (autoRegisterNamespace === NAMESPACE_MAIN) {
+						$.data(this.element, NAMESPACE_MAIN, this);
+						$.data(this.element, NAMESPACE_ALTERNATE, this);
+					} else {
+						$.data(this.element, NAMESPACE_ALTERNATE, this);
+					}
 				}
 				return this;
 			},
@@ -1052,10 +1059,12 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 						ticks[i].removeEventListener('mouseenter', this.ticksCallbackMap[i].mouseEnter, false);
 						ticks[i].removeEventListener('mouseleave', this.ticksCallbackMap[i].mouseLeave, false);
 					}
-					this.handle1.removeEventListener('mouseenter', this.handleCallbackMap.handle1.mouseEnter, false);
-					this.handle2.removeEventListener('mouseenter', this.handleCallbackMap.handle2.mouseEnter, false);
-					this.handle1.removeEventListener('mouseleave', this.handleCallbackMap.handle1.mouseLeave, false);
-					this.handle2.removeEventListener('mouseleave', this.handleCallbackMap.handle2.mouseLeave, false);
+					if (this.handleCallbackMap.handle1 && this.handleCallbackMap.handle2) {
+						this.handle1.removeEventListener('mouseenter', this.handleCallbackMap.handle1.mouseEnter, false);
+						this.handle2.removeEventListener('mouseenter', this.handleCallbackMap.handle2.mouseEnter, false);
+						this.handle1.removeEventListener('mouseleave', this.handleCallbackMap.handle1.mouseLeave, false);
+						this.handle2.removeEventListener('mouseleave', this.handleCallbackMap.handle2.mouseLeave, false);
+					}
 				}
 
 				this.handleCallbackMap = null;
@@ -1064,18 +1073,27 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 				if (this.showTooltip) {
 					this.handle1.removeEventListener("focus", this.showTooltip, false);
 					this.handle2.removeEventListener("focus", this.showTooltip, false);
+					this.handle1.removeEventListener("touchstart", this.showTooltip, false);
+					this.handle1.removeEventListener("touchmove", this.showTooltip, false);
+					this.handle2.removeEventListener("touchstart", this.showTooltip, false);
+					this.handle2.removeEventListener("touchmove", this.showTooltip, false);
 				}
 				if (this.hideTooltip) {
 					this.handle1.removeEventListener("blur", this.hideTooltip, false);
 					this.handle2.removeEventListener("blur", this.hideTooltip, false);
+					this.handle1.removeEventListener("touchend", this.hideTooltip, false);
+					this.handle2.removeEventListener("touchend", this.hideTooltip, false);
 				}
 
 				// Remove event listeners from sliderElem
 				if (this.showTooltip) {
 					this.sliderElem.removeEventListener("mouseenter", this.showTooltip, false);
+					this.sliderElem.removeEventListener("touchstart", this.showTooltip, false);
+					this.sliderElem.removeEventListener("touchmove", this.showTooltip, false);
 				}
 				if (this.hideTooltip) {
 					this.sliderElem.removeEventListener("mouseleave", this.hideTooltip, false);
+					this.sliderElem.removeEventListener("touchend", this.hideTooltip, false);
 				}
 				this.sliderElem.removeEventListener("touchstart", this.touchstart, false);
 				this.sliderElem.removeEventListener("touchmove", this.touchmove, false);
@@ -1121,7 +1139,7 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 				this._state.over = true;
 			},
 			_hideTooltip: function _hideTooltip() {
-				if (this._state.inDrag === false && this.alwaysShowTooltip !== true) {
+				if (this._state.inDrag === false && this._alwaysShowTooltip !== true) {
 					this._removeClass(this.tooltip, 'in');
 					this._removeClass(this.tooltip_min, 'in');
 					this._removeClass(this.tooltip_max, 'in');
@@ -1129,6 +1147,7 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 				this._state.over = false;
 			},
 			_setToolTipOnMouseOver: function _setToolTipOnMouseOver(tempState) {
+				var self = this;
 				var formattedTooltipVal = this.options.formatter(!tempState ? this._state.value[0] : tempState.value[0]);
 				var positionPercentages = !tempState ? getPositionPercentages(this._state, this.options.reversed) : getPositionPercentages(tempState, this.options.reversed);
 				this._setText(this.tooltipInner, formattedTooltipVal);
@@ -1137,7 +1156,7 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 
 				function getPositionPercentages(state, reversed) {
 					if (reversed) {
-						return [100 - state.percentage[0], this.options.range ? 100 - state.percentage[1] : state.percentage[1]];
+						return [100 - state.percentage[0], self.options.range ? 100 - state.percentage[1] : state.percentage[1]];
 					}
 					return [state.percentage[0], state.percentage[1]];
 				}
@@ -1158,24 +1177,34 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 			},
 			_addTickListener: function _addTickListener() {
 				return {
-					addMouseEnter: function addMouseEnter(reference, tick, index) {
+					addMouseEnter: function addMouseEnter(reference, element, index) {
 						var enter = function enter() {
 							var tempState = reference._copyState();
-							var idString = index >= 0 ? index : this.attributes['aria-valuenow'].value;
-							var hoverIndex = parseInt(idString, 10);
-							tempState.value[0] = hoverIndex;
-							tempState.percentage[0] = reference.options.ticks_positions[hoverIndex];
+							// Which handle is being hovered over?
+							var val = element === reference.handle1 ? tempState.value[0] : tempState.value[1];
+							var per = void 0;
+
+							// Setup value and percentage for tick's 'mouseenter'
+							if (index !== undefined) {
+								val = reference.options.ticks[index];
+								per = reference.options.ticks_positions.length > 0 && reference.options.ticks_positions[index] || reference._toPercentage(reference.options.ticks[index]);
+							} else {
+								per = reference._toPercentage(val);
+							}
+
+							tempState.value[0] = val;
+							tempState.percentage[0] = per;
 							reference._setToolTipOnMouseOver(tempState);
 							reference._showTooltip();
 						};
-						tick.addEventListener("mouseenter", enter, false);
+						element.addEventListener("mouseenter", enter, false);
 						return enter;
 					},
-					addMouseLeave: function addMouseLeave(reference, tick) {
+					addMouseLeave: function addMouseLeave(reference, element) {
 						var leave = function leave() {
 							reference._hideTooltip();
 						};
-						tick.addEventListener("mouseleave", leave, false);
+						element.addEventListener("mouseleave", leave, false);
 						return leave;
 					}
 				};
@@ -1447,6 +1476,7 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 				}
 			},
 			_mousedown: function _mousedown(ev) {
+				console.log('mousedown');
 				if (!this._state.enabled) {
 					return false;
 				}
@@ -1468,6 +1498,8 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 				} else {
 					this._state.dragged = 0;
 				}
+
+				console.log("mousedown, dragged=" + this._state.dragged + ",\t\t\t\t\tper=" + percentage + ",\t\t\t\t\tper0=" + this._state.percentage[0] + ", per1=" + this._state.percentage[1]);
 
 				this._state.percentage[this._state.dragged] = percentage;
 
@@ -1511,14 +1543,8 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 				return true;
 			},
 			_touchstart: function _touchstart(ev) {
-				if (ev.changedTouches === undefined) {
-					this._mousedown(ev);
-					return;
-				}
-
-				var touch = ev.changedTouches[0];
-				this.touchX = touch.pageX;
-				this.touchY = touch.pageY;
+				console.log('touchstart, ev.changedTouches=' + ev.changedTouches);
+				this._mousedown(ev);
 			},
 			_triggerFocusOnHandle: function _triggerFocusOnHandle(handleIdx) {
 				if (handleIdx === 0) {
@@ -1595,6 +1621,7 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 				ev.returnValue = false;
 			},
 			_mousemove: function _mousemove(ev) {
+				console.log('mousemove, dragged=' + this._state.dragged);
 				if (!this._state.enabled) {
 					return false;
 				}
@@ -1609,24 +1636,14 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 				return false;
 			},
 			_touchmove: function _touchmove(ev) {
+				console.log('touchmove, ev.changedTouches=' + ev.changedTouches);
 				if (ev.changedTouches === undefined) {
 					return;
 				}
 
-				var touch = ev.changedTouches[0];
-
-				var xDiff = touch.pageX - this.touchX;
-				var yDiff = touch.pageY - this.touchY;
-
-				if (!this._state.inDrag) {
-					// Vertical Slider
-					if (this.options.orientation === 'vertical' && xDiff <= 5 && xDiff >= -5 && (yDiff >= 15 || yDiff <= -15)) {
-						this._mousedown(ev);
-					}
-					// Horizontal slider.
-					else if (yDiff <= 5 && yDiff >= -5 && (xDiff >= 15 || xDiff <= -15)) {
-							this._mousedown(ev);
-						}
+				// Prevent page from scrolling and only drag the slider
+				if (ev.preventDefault) {
+					ev.preventDefault();
 				}
 			},
 			_adjustPercentageForRangeSliders: function _adjustPercentageForRangeSliders(percentage) {
@@ -1652,6 +1669,7 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 				}
 			},
 			_mouseup: function _mouseup(ev) {
+				console.log('mouseup');
 				if (!this._state.enabled) {
 					return false;
 				}
@@ -1702,7 +1720,6 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 					}
 				} else {
 					val = this._toValue(this._state.percentage[0]);
-					val = parseFloat(val);
 					val = this._applyPrecision(val);
 					if (snapToClosestTick) {
 						val = this._snapToClosestTick(val);
@@ -1745,7 +1762,7 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
    	Source: http://stackoverflow.com/questions/10454518/javascript-how-to-retrieve-the-number-of-decimals-of-a-string-number
    */
 			_getPercentage: function _getPercentage(ev) {
-				if (this.touchCapable && (ev.type === 'touchstart' || ev.type === 'touchmove')) {
+				if (this.touchCapable && (ev.type === 'touchstart' || ev.type === 'touchmove' || ev.type === 'touchend')) {
 					ev = ev.touches[0];
 				}
 
@@ -1928,8 +1945,6 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
   		Attach to global namespace
   	*********************************/
 		if ($ && $.fn) {
-			var autoRegisterNamespace = void 0;
-
 			if (!$.fn.slider) {
 				$.bridget(NAMESPACE_MAIN, Slider);
 				autoRegisterNamespace = NAMESPACE_MAIN;
