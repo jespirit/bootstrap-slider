@@ -1763,7 +1763,7 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
    */
 			_getPercentage: function _getPercentage(ev) {
 				if (this.touchCapable && (ev.type === 'touchstart' || ev.type === 'touchmove' || ev.type === 'touchend')) {
-					ev = ev.touches[0];
+					ev = ev.changedTouches[0];
 				}
 
 				var eventPosition = ev[this.mousePos];
