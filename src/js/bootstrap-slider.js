@@ -828,6 +828,7 @@ const windowIsDefined = (typeof window === "object");
 						mouseLeave: mouseLeave
 					};
 				} else {
+					// will only show the tooltip for the slider when `ticks_tooltip` is set to `false`
 					this.sliderElem.addEventListener("mouseenter", this.showTooltip, false);
 					this.sliderElem.addEventListener("mouseleave", this.hideTooltip, false);
 				}
@@ -1569,7 +1570,10 @@ const windowIsDefined = (typeof window === "object");
 					return;
 				}
 
+				// changedTouches[] is an array of Touch objects
 				var touch = ev.changedTouches[0];
+				// pageX and pageY are coordinates relative to the edge of the document
+				// including any horizontal/vertical scroll offsets
 				this.touchX = touch.pageX;
 				this.touchY = touch.pageY;
 			},
