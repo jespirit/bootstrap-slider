@@ -1783,6 +1783,8 @@ const windowIsDefined = (typeof window === "object");
 						min = [this.options.ticks[i], diff];
 					}
 				}
+				// ticks_snap_bounds = 0 (default)
+				// if min[1] == 0 then handle is already on top of tick
 				if (min[1] <= this.options.ticks_snap_bounds) {
 					return min[0];
 				}

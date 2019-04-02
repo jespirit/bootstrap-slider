@@ -309,6 +309,7 @@ module.exports = function(grunt) {
   grunt.registerTask('build-gh-pages', [
     'less:development',
     'babel',
+    // grunt task:target
     'template:generate-gh-pages'
   ]);
   // 1. clean dist/
